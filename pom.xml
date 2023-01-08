@@ -12,18 +12,26 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<app.version>${project.version}</app.version>
-		<exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
-		<maven-assembly-plugin.version>3.4.2</maven-assembly-plugin.version>
-		<native-maven-plugin.version>0.9.19</native-maven-plugin.version>
-		<maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
-		<properties-maven-plugin.version>1.1.0</properties-maven-plugin.version>
-		<picocli.version>4.7.0</picocli.version>
-		<junit.version>5.9.1</junit.version>
-		<assertj.version>3.23.1</assertj.version>
+        <app.version>${project.version}</app.version>
+        <mainClass>org.example.Main</mainClass>
+        <executableName>app</executableName>
+
+        <!-- plugin version -->
+        <exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
+        <maven-assembly-plugin.version>3.4.2</maven-assembly-plugin.version>
+        <maven-compiler-plugin.version>3.6.1</maven-compiler-plugin.version>
+        <properties-maven-plugin.version>1.1.0</properties-maven-plugin.version>
+        <native-maven-plugin.version>0.9.19</native-maven-plugin.version>
+        <jib-maven-plugin.version>3.3.1</jib-maven-plugin.version>
+        <jib-native-image-extension-maven.version>0.1.0</jib-native-image-extension-maven.version>
 		<!-- 3.0.0 M5+ is required for running native tests -->
 		<!-- https://graalvm.github.io/native-build-tools/latest/maven-plugin.html#testing-support -->
 		<maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+
+        <!-- dependencies -->
+        <picocli.version>4.7.0</picocli.version>
+        <junit.version>5.9.1</junit.version>
+		<assertj.version>3.23.1</assertj.version>
 	</properties>
 
 	<dependencies>
@@ -88,7 +96,7 @@
 							<goal>java</goal>
 						</goals>
 						<configuration>
-							<mainClass>org.example.Main</mainClass>
+							<mainClass>${mainClass}</mainClass>
 						</configuration>
 					</execution>
 					<!-- generates bash/zsh autocompletion script -->
@@ -108,7 +116,7 @@
 								<argument>--force</argument>
 								<argument>--completionScript</argument>
 								<argument>${project.build.directory}/app_completion.sh</argument>
-								<argument>org.example.Main</argument>
+								<argument>${mainClass}</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -158,13 +166,13 @@
 							<archive>
 								<manifest>
 									<addClasspath>true</addClasspath>
-									<mainClass>org.example.Main</mainClass>
+									<mainClass>${mainClass}</mainClass>
 								</manifest>
 							</archive>
 							<descriptorRefs>
 								<descriptorRef>jar-with-dependencies</descriptorRef>
 							</descriptorRefs>
-							<finalName>app</finalName>
+							<finalName>${executableName}</finalName>
 							<appendAssemblyId>false</appendAssemblyId>
 						</configuration>
 						<executions>
@@ -209,9 +217,9 @@
 						<version>${native-maven-plugin.version}</version>
 						<extensions>true</extensions>
 						<configuration>
-							<mainClass>org.example.Main</mainClass>
+							<mainClass>${mainClass}</mainClass>
 							<!-- executable file name -->
-							<imageName>app</imageName>
+							<imageName>${executableName}</imageName>
 							<!-- enable reachability metadata https://graalvm.github.io/native-build-tools/latest/maven-plugin.html#metadata-support -->
 							<metadataRepository>
 								<enabled>true</enabled>
@@ -234,6 +242,30 @@
 							</execution>
 						</executions>
 					</plugin>
+                    <plugin>
+                        <groupId>com.google.cloud.tools</groupId>
+                        <artifactId>jib-maven-plugin</artifactId>
+                        <version>${jib-maven-plugin.version}</version>
+
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.google.cloud.tools</groupId>
+                                <artifactId>jib-native-image-extension-maven</artifactId>
+                                <version>${jib-native-image-extension-maven.version}</version>
+                            </dependency>
+                        </dependencies>
+
+                        <configuration>
+                            <pluginExtensions>
+                                <pluginExtension>
+                                    <implementation>com.google.cloud.tools.jib.maven.extension.nativeimage.JibNativeImageExtension</implementation>
+                                    <properties>
+                                        <imageName>${executableName}</imageName>
+                                    </properties>
+                                </pluginExtension>
+                            </pluginExtensions>
+                        </configuration>
+                    </plugin>
 				</plugins>
 			</build>
 		</profile>

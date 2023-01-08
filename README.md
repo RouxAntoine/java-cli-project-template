@@ -21,20 +21,26 @@ Click the big green *Use This Template* button and start building your own CLI.
 
 Run tests & build an executable JAR:
 
-```
+```shell
 $ ./mvnw package
 ```
 
 Run tests as native image & build a native executable:
 
-```
+```shell
 $ ./mvnw package -Pnative
 ```
 
 Run application through Maven
 
-```
+```shell
 $ ./mvnw -Dexec.args=--help
+```
+
+Build container in local docker daemon
+
+```shell
+$ ./mvnw -Pnative clean verify jib:dockerBuild -Dimage=org.example.registry/app:latest -Djib.dockerClient.executable=/opt/homebrew/bin/docker.lima
 ```
 
 Sounds good? Consider [❤️ Sponsoring](https://github.com/sponsors/maciejwalkowiak) the project! Thank you!

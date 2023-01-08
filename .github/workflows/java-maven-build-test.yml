@@ -1,0 +1,110 @@
+name: Build and Test workflow for Spring Boot microservices
+
+on:
+  workflow_call:
+    inputs:
+      # pass in environment through manual trigger, if not passed in, default to 'development'
+      env:
+        required: true
+        type: string
+        default: 'development'
+      # working-directory is added to accommodate monorepo.  For multi repo, defaults to '.', current directory
+      working-directory:
+        required: false
+        type: string
+        default: '.'
+      # pass in java version to allow different app requiring different java versions to reuse the same workflow, default to java 17
+      java-version:
+        required: false
+        type: string
+        default: '17'
+      # pass in graalvm version
+      graalvm-version:
+        required: false
+        type: string
+        default: '22.3.0'
+      # allowing calling workflows to pass in maven parameter(s) such as '-Dmaven.test.skip' for certain apps, default to blank, not to skip test
+      maven-params:
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    # accommodating monorepo, this sets the working directory at the job level, for multi repo, defaults to "."
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+
+    # important to specify environment here, defaults to 'development', so github ations knows where to retrieve the secrets
+    environment: ${{ inputs.env || 'development' }}
+
+    # only run this job for auto trigger by PR merge, if manual trigger for other environments than dev,
+    # no need to run this job as the image will be pulled and promoted to envs higher than dev
+    # also dependabot PRs do not need to run this flow as GitHub prohibits dependabot PRs to access workflows
+    # dealing with secrets due to security reason.
+    if: (inputs.env == null || inputs.env == 'development') && github.actor != 'dependabot[bot]'
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.0.0
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
+      - name: Checkout Code
+        uses: actions/checkout@v2.6.0
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          version: ${{ inputs.graalvm-version }}
+          java-version: ${{ inputs.java-version }}
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: 'true'
+
+      - name: Build with Maven
+        run: mvn clean verify ${{ inputs.maven-params }} --file pom.xml
+
+      - name: Set project version as environment variable
+        run: |
+          echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+          echo "EXEC_NAME=$(mvn help:evaluate -Dexpression=executableName -q -DforceStdout)" >> $GITHUB_ENV
+
+      - name: Print debug info
+        run: |
+          echo environment is ${{ inputs.env }}
+          echo working_directory is ${{ inputs.working-directory }}
+          echo project version is ${{ env.PROJECT_VERSION }}
+          echo java-version is ${{ inputs.java-version }}
+          echo executable name is ${{ env.EXEC_NAME }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: docker build, tag and push to ghcr
+        id: build-image
+        env:
+          IMAGE_TAG: ${{ env.PROJECT_VERSION }}
+          CR_REGISTRY: "ghcr.io"
+        run: |
+          mvn jib:build ${{ inputs.maven-params }} --file pom.xml -Dimage=$CR_REGISTRY/${GITHUB_REPOSITORY,,}/$EXEC_NAME:$IMAGE_TAG
+          echo "image=$CR_REGISTRY/${GITHUB_REPOSITORY,,}/$EXEC_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Scan ECR image with Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.8.0
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
