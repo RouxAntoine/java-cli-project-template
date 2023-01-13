@@ -12,6 +12,8 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency: release_process
+
 jobs:
   build-and-test:
     permissions:
