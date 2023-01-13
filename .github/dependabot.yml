@@ -1,0 +1,30 @@
+# Please see the documentation for all configuration options:
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file#configuration-options-for-private-registries
+registries:
+  spring-artifactory:
+    type: maven-repository
+    url: https://repo.spring.io/release
+    # replaces-base: true # replace default maven central repository
+
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
+    registries: "*"
+    commit-message:
+      prefix: ":arrow_up: "
+      prefix-development: ":boom: "
+    open-pull-requests-limit: 15
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "main"
+    commit-message:
+      prefix: ":arrow_up: "
+    open-pull-requests-limit: 15
