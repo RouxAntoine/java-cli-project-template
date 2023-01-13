@@ -65,11 +65,11 @@ jobs:
           native-image-job-reports: 'true'
 
       - name: Build with Maven
-        run: mvn clean verify ${{ inputs.maven-params }} --file pom.xml
+        run: ./mvnw clean verify ${{ inputs.maven-params }} --file pom.xml
 
       - name: Set project version as environment variable
         run: |
-          echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+          echo "PROJECT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
       - name: Print debug info
         run: |
@@ -91,7 +91,7 @@ jobs:
           IMAGE_TAG: ${{ env.PROJECT_VERSION }}
           CR_REGISTRY: "ghcr.io"
         run: |
-          mvn jib:build ${{ inputs.maven-params }} --file pom.xml -Dimage=$CR_REGISTRY/${GITHUB_REPOSITORY,,}:$IMAGE_TAG
+          ./mvnw jib:build ${{ inputs.maven-params }} --file pom.xml -Dimage=$CR_REGISTRY/${GITHUB_REPOSITORY,,}:$IMAGE_TAG
           echo "image=$CR_REGISTRY/${GITHUB_REPOSITORY,,}:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Scan ECR image with Trivy vulnerability scanner
