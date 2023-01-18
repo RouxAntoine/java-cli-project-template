@@ -43,4 +43,10 @@ Build container in local docker daemon
 $ ./mvnw -Pnative clean verify jib:dockerBuild -Dimage=org.example.registry/app:latest -Djib.dockerClient.executable=/opt/homebrew/bin/docker.lima
 ```
 
+Inspect image content with
+
+```shell
+$ dive org.example.registry/app:latest
+```
+
 Sounds good? Consider [❤️ Sponsoring](https://github.com/sponsors/maciejwalkowiak) the project! Thank you!
