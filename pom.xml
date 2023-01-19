@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.example</groupId>
-	<artifactId>picocli-project-template</artifactId>
-	<version>1.0-SNAPSHOT</version>
+    <groupId>org.example</groupId>
+    <artifactId>picocli-project-template</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
-	<properties>
-		<maven.compiler.source>17</maven.compiler.source>
-		<maven.compiler.target>17</maven.compiler.target>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <app.version>${project.version}</app.version>
         <mainClass>org.example.Main</mainClass>
         <executableName>app</executableName>
@@ -24,224 +24,222 @@
         <native-maven-plugin.version>0.9.19</native-maven-plugin.version>
         <jib-maven-plugin.version>3.3.1</jib-maven-plugin.version>
         <jib-native-image-extension-maven.version>0.1.0</jib-native-image-extension-maven.version>
-		<!-- 3.0.0 M5+ is required for running native tests -->
-		<!-- https://graalvm.github.io/native-build-tools/latest/maven-plugin.html#testing-support -->
-		<maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+        <!-- 3.0.0 M5+ is required for running native tests -->
+        <!-- https://graalvm.github.io/native-build-tools/latest/maven-plugin.html#testing-support -->
+        <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
 
         <!-- dependencies -->
         <picocli.version>4.7.0</picocli.version>
         <junit.version>5.9.1</junit.version>
-		<assertj.version>3.23.1</assertj.version>
-	</properties>
+        <assertj.version>3.23.1</assertj.version>
+    </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>info.picocli</groupId>
-			<artifactId>picocli</artifactId>
-			<version>${picocli.version}</version>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>${picocli.version}</version>
+        </dependency>
 
-		<!-- just an example dependency -->
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.11.0</version>
-		</dependency>
+        <!-- just an example dependency -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
 
-		<!-- test dependencies -->
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<version>${assertj.version}</version>
-			<scope>test</scope>
-		</dependency>
+    </dependencies>
 
-	</dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.junit</groupId>
-				<artifactId>junit-bom</artifactId>
-				<version>${junit.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+    <build>
+        <defaultGoal>exec:java@run</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>${exec-maven-plugin.version}</version>
+                <executions>
+                    <!-- simplifies running application without building the package -->
+                    <!-- mvn -Dexec.args="list directory" -->
+                    <execution>
+                        <id>run</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>${mainClass}</mainClass>
+                        </configuration>
+                    </execution>
+                    <!-- generates bash/zsh autocompletion script -->
+                    <execution>
+                        <id>generate-autocompletion-script</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>-Dpicocli.autocomplete.systemExitOnError</argument>
+                                <argument>-cp</argument>
+                                <classpath/>
+                                <argument>picocli.AutoComplete</argument>
+                                <argument>--force</argument>
+                                <argument>--completionScript</argument>
+                                <argument>${project.build.directory}/app_completion.sh</argument>
+                                <argument>${mainClass}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
-	<build>
-		<defaultGoal>exec:java@run</defaultGoal>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>${exec-maven-plugin.version}</version>
-				<executions>
-					<!-- simplifies running application without building the package -->
-					<!-- mvn -Dexec.args="list directory" -->
-					<execution>
-						<id>run</id>
-						<goals>
-							<goal>java</goal>
-						</goals>
-						<configuration>
-							<mainClass>${mainClass}</mainClass>
-						</configuration>
-					</execution>
-					<!-- generates bash/zsh autocompletion script -->
-					<execution>
-						<id>generate-autocompletion-script</id>
-						<phase>package</phase>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-						<configuration>
-							<executable>java</executable>
-							<arguments>
-								<argument>-Dpicocli.autocomplete.systemExitOnError</argument>
-								<argument>-cp</argument>
-								<classpath/>
-								<argument>picocli.AutoComplete</argument>
-								<argument>--force</argument>
-								<argument>--completionScript</argument>
-								<argument>${project.build.directory}/app_completion.sh</argument>
-								<argument>${mainClass}</argument>
-							</arguments>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+            <!-- writes file with application version needed for picocli's "-V" -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>${properties-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>write-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.build.outputDirectory}/app.properties</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </build>
 
-			<!-- writes file with application version needed for picocli's "-V" -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>properties-maven-plugin</artifactId>
-				<version>${properties-maven-plugin.version}</version>
-				<executions>
-					<execution>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>write-project-properties</goal>
-						</goals>
-						<configuration>
-							<outputFile>${project.build.outputDirectory}/app.properties</outputFile>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${maven-surefire-plugin.version}</version>
-			</plugin>
-		</plugins>
-	</build>
-
-	<profiles>
-		<!-- pretty fast, builds an executable jar -->
-		<profile>
-			<id>jar</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-assembly-plugin</artifactId>
-						<version>${maven-assembly-plugin.version}</version>
-						<configuration>
-							<archive>
-								<manifest>
-									<addClasspath>true</addClasspath>
-									<mainClass>${mainClass}</mainClass>
-								</manifest>
-							</archive>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
-							<finalName>${executableName}</finalName>
-							<appendAssemblyId>false</appendAssemblyId>
-						</configuration>
-						<executions>
-							<execution>
-								<id>make-assembly</id>
-								<phase>package</phase>
-								<goals>
-									<goal>single</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<!-- pretty slow, builds a native executable -->
-		<profile>
-			<id>native</id>
-			<build>
-				<plugins>
-					<!-- add picocli annotation processing https://picocli.info/#_annotation_processor -->
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<version>${maven-compiler-plugin.version}</version>
-						<configuration>
-							<annotationProcessorPaths>
-								<path>
-									<groupId>info.picocli</groupId>
-									<artifactId>picocli-codegen</artifactId>
-									<version>${picocli.version}</version>
-								</path>
-							</annotationProcessorPaths>
-							<compilerArgs>
-								<arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
-							</compilerArgs>
-						</configuration>
-					</plugin>
-					<plugin>
-						<groupId>org.graalvm.buildtools</groupId>
-						<artifactId>native-maven-plugin</artifactId>
-						<version>${native-maven-plugin.version}</version>
-						<extensions>true</extensions>
-						<configuration>
-							<mainClass>${mainClass}</mainClass>
-							<!-- executable file name -->
-							<imageName>${executableName}</imageName>
-							<!-- enable reachability metadata https://graalvm.github.io/native-build-tools/latest/maven-plugin.html#metadata-support -->
-							<metadataRepository>
-								<enabled>true</enabled>
-							</metadataRepository>
-						</configuration>
-						<executions>
-							<execution>
-								<id>build-native</id>
-								<goals>
-									<goal>compile-no-fork</goal>
-								</goals>
-								<phase>package</phase>
-							</execution>
-							<execution>
-								<id>test-native</id>
-								<goals>
-									<goal>test</goal>
-								</goals>
-								<phase>test</phase>
-							</execution>
-						</executions>
-					</plugin>
+    <profiles>
+        <!-- pretty fast, builds an executable jar -->
+        <profile>
+            <id>jar</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${maven-assembly-plugin.version}</version>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>true</addClasspath>
+                                    <mainClass>${mainClass}</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <finalName>${executableName}</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- pretty slow, builds a native executable -->
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <!-- add picocli annotation processing https://picocli.info/#_annotation_processor -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>${maven-compiler-plugin.version}</version>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>info.picocli</groupId>
+                                    <artifactId>picocli-codegen</artifactId>
+                                    <version>${picocli.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                            <compilerArgs>
+                                <arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>${native-maven-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <mainClass>${mainClass}</mainClass>
+                            <!-- executable file name -->
+                            <imageName>${executableName}</imageName>
+                            <!-- enable reachability metadata https://graalvm.github.io/native-build-tools/latest/maven-plugin.html#metadata-support -->
+                            <metadataRepository>
+                                <enabled>true</enabled>
+                            </metadataRepository>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                            <execution>
+                                <id>test-native</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <phase>test</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>com.google.cloud.tools</groupId>
                         <artifactId>jib-maven-plugin</artifactId>
@@ -256,9 +254,23 @@
                         </dependencies>
 
                         <configuration>
+                            <from>
+                                <platforms>
+                                    <platform>
+                                        <architecture>amd64</architecture>
+                                        <os>linux</os>
+                                    </platform>
+                                    <platform>
+                                        <architecture>arm64</architecture>
+                                        <os>linux</os>
+                                    </platform>
+                                </platforms>
+                            </from>
                             <pluginExtensions>
                                 <pluginExtension>
-                                    <implementation>com.google.cloud.tools.jib.maven.extension.nativeimage.JibNativeImageExtension</implementation>
+                                    <implementation>
+                                        com.google.cloud.tools.jib.maven.extension.nativeimage.JibNativeImageExtension
+                                    </implementation>
                                     <properties>
                                         <imageName>${executableName}</imageName>
                                     </properties>
@@ -266,8 +278,8 @@
                             </pluginExtensions>
                         </configuration>
                     </plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
