@@ -1,10 +1,19 @@
 package org.example;
 
-import org.example.picocli.PropertiesFileVersionProvider;
+import org.example.cmd.HelloCommand;
+import org.example.cmd.ListFilesCommand;
+import org.example.cmd.PropertiesFileVersionProvider;
 import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
-@CommandLine.Command(name = "app", mixinStandardHelpOptions = true, versionProvider = PropertiesFileVersionProvider.class, subcommands = {
-        HelloCommand.class, ListFilesCommand.class })
+@Command(
+    name = "app",
+    mixinStandardHelpOptions = true,
+    versionProvider = PropertiesFileVersionProvider.class,
+    subcommands = {
+        HelloCommand.class, ListFilesCommand.class
+    }
+)
 public class Main {
 
     public static void main(String[] args) {
